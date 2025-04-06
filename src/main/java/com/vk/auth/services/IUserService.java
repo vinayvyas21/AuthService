@@ -13,6 +13,7 @@ import com.vk.auth.dtos.LoginRequestDto;
 import com.vk.auth.dtos.RequestStatus;
 import com.vk.auth.dtos.UserSignUpRequestDto;
 import com.vk.auth.dtos.UserSignUpResponseDto;
+import com.vk.auth.exceptions.ActiveSessionsLimitationException;
 import com.vk.auth.exceptions.InvalidTokenException;
 import com.vk.auth.exceptions.UserAlreadyExistsException;
 import com.vk.auth.exceptions.UserNotFoundException;
@@ -88,6 +89,14 @@ public class IUserService implements UserService {
 		String token = null;
 		if (user.isPresent()) {
 			if (verifyPassword(request.getPassword(), user.get().getPasswordSalt())) {
+				
+				List<Session> sessions = sessionRepository.findByUserId(user.get().getId());
+				long activeSessions = sessions.stream().filter(session -> session.getSessionStatus() == SessionStatus.ACTIVE).count();
+				
+				if(activeSessions == 2) {
+					throw new ActiveSessionsLimitationException("Only 2 active sessions are allowed");
+				}
+				
 				token = jwtUtil.generateToken(user.get().getEmail());
 
 				Session session = new Session();

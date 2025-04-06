@@ -17,6 +17,7 @@ import com.vk.auth.dtos.LoginResponseDto;
 import com.vk.auth.dtos.RequestStatus;
 import com.vk.auth.dtos.UserSignUpRequestDto;
 import com.vk.auth.dtos.UserSignUpResponseDto;
+import com.vk.auth.exceptions.ActiveSessionsLimitationException;
 import com.vk.auth.exceptions.InvalidTokenException;
 import com.vk.auth.exceptions.UserAlreadyExistsException;
 import com.vk.auth.exceptions.UserNotFoundException;
@@ -72,6 +73,9 @@ public class UserController {
 		} catch (WrongPasswordException ex) {
 			response.setRequestStatus(RequestStatus.FAILURE);
 			status = HttpStatus.BAD_REQUEST;
+		} catch(ActiveSessionsLimitationException ex) {
+			response.setRequestStatus(RequestStatus.FAILURE);
+			status = HttpStatus.CONFLICT;
 		}
 		return new ResponseEntity<>(response, status);
 	}
