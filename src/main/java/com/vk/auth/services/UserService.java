@@ -14,4 +14,11 @@ public interface UserService {
 	public boolean deleteUser(Long id);
 	
 	public String login(LoginRequestDto request);
+	
+	public boolean validate(String token);
+	
+	public boolean logout(String token);
+	
+	public void logoutAll(Long userId);
+	
 }

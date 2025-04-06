@@ -1,5 +1,6 @@
 package com.vk.auth.services;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,7 +13,10 @@ import com.vk.auth.dtos.LoginRequestDto;
 import com.vk.auth.dtos.RequestStatus;
 import com.vk.auth.dtos.UserSignUpRequestDto;
 import com.vk.auth.dtos.UserSignUpResponseDto;
+import com.vk.auth.exceptions.InvalidTokenException;
 import com.vk.auth.exceptions.UserAlreadyExistsException;
+import com.vk.auth.exceptions.UserNotFoundException;
+import com.vk.auth.exceptions.WrongPasswordException;
 import com.vk.auth.models.Session;
 import com.vk.auth.models.SessionStatus;
 import com.vk.auth.models.User;
@@ -46,7 +50,7 @@ public class IUserService implements UserService {
 
 	@Override
 	public UserSignUpResponseDto createUser(UserSignUpRequestDto request) throws UserAlreadyExistsException {
-		if(this.userRepository.findByEmail(request.getEmail()).isPresent()) {
+		if (this.userRepository.findByEmail(request.getEmail()).isPresent()) {
 			throw new UserAlreadyExistsException("User already exists with the email : " + request.getEmail());
 		}
 		User user = UserConverter.convertUserSignUpRequestToUser(request);
@@ -99,9 +103,11 @@ public class IUserService implements UserService {
 				}
 
 				userRepository.save(user.get());
-
-				return token;
+			} else {
+				throw new WrongPasswordException("Password is wrong");
 			}
+		} else {
+			throw new UserNotFoundException("User is not found with email: " + request.getEmail());
 		}
 
 		return token;
@@ -113,6 +119,44 @@ public class IUserService implements UserService {
 
 	public boolean verifyPassword(String plainPassword, String hashedPassword) {
 		return encoder.matches(plainPassword, hashedPassword);
+	}
+
+	@Override
+	public boolean validate(String token) {
+		return jwtUtil.isTokenValid(token);
+
+	}
+
+	@Override
+	public boolean logout(String token) throws InvalidTokenException {
+		if (jwtUtil.isTokenValid(token)) {
+			Optional<Session> sessionOptional = sessionRepository.findByToken(token);
+			if (sessionOptional.isPresent()) {
+				Session session = sessionOptional.get();
+				session.setSessionStatus(SessionStatus.ENDED);
+				sessionRepository.save(session);
+				return true;
+			} else {
+				throw new InvalidTokenException("Invalid token");
+			}
+		} else {
+			throw new InvalidTokenException("Invalid token");
+		}
+	}
+
+	@Override
+	public void logoutAll(Long userId) {
+		Optional<User> userOptional = userRepository.findById(userId);
+		if (userOptional.isEmpty()) {
+			throw new UserNotFoundException("User is not found for Id: " + userId);
+		}
+
+		List<Session> sessionsList = sessionRepository.findByUserId(userId);
+
+		sessionsList.stream().forEach(session -> {
+			session.setSessionStatus(SessionStatus.ENDED);
+		});
+		sessionRepository.saveAll(sessionsList);
 	}
 
 }

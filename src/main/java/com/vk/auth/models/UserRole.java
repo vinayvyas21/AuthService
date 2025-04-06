@@ -8,7 +8,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserRole extends BaseModel {
-	
 	String name;
-
 }

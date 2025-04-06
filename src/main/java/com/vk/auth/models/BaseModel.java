@@ -1,12 +1,10 @@
 package com.vk.auth.models;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import com.vk.auth.listeners.AuditListener;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,20 +16,17 @@ import lombok.Setter;
 @MappedSuperclass
 @Getter
 @Setter
-@EntityListeners(AuditingEntityListener.class) 
+@EntityListeners(AuditListener.class)
 public class BaseModel {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@CreatedDate
-	@Column (updatable = false)
-	private Date createdAt;
+	private LocalDateTime createdAt;
 	
-	@LastModifiedDate
-	private Date updatedAt;
+	private LocalDateTime updatedAt;
 	
-	private Date deletedAt;
+	private LocalDateTime deletedAt;
 
 }
