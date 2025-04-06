@@ -1,15 +1,17 @@
 package com.vk.auth.services;
 
-import com.vk.auth.dtos.LoginRequest;
-import com.vk.auth.dtos.UserSignUpRequest;
+import com.vk.auth.dtos.LoginRequestDto;
+import com.vk.auth.dtos.UserSignUpRequestDto;
+import com.vk.auth.dtos.UserSignUpResponseDto;
+import com.vk.auth.exceptions.UserAlreadyExistsException;
 
 public interface UserService {
 	
-	public void createUser(UserSignUpRequest request);
+	public UserSignUpResponseDto createUser(UserSignUpRequestDto request) throws UserAlreadyExistsException;
 	
 	public boolean updateUser();
 	
 	public boolean deleteUser(Long id);
 	
-	public boolean login(LoginRequest request);
+	public String login(LoginRequestDto request);
 }

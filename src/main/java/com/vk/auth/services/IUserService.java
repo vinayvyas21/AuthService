@@ -1,16 +1,20 @@
 package com.vk.auth.services;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.vk.auth.converters.UserConverter;
-import com.vk.auth.dtos.LoginRequest;
-import com.vk.auth.dtos.UserSignUpRequest;
+import com.vk.auth.dtos.LoginRequestDto;
+import com.vk.auth.dtos.RequestStatus;
+import com.vk.auth.dtos.UserSignUpRequestDto;
+import com.vk.auth.dtos.UserSignUpResponseDto;
+import com.vk.auth.exceptions.UserAlreadyExistsException;
 import com.vk.auth.models.Session;
+import com.vk.auth.models.SessionStatus;
 import com.vk.auth.models.User;
 import com.vk.auth.models.UserRole;
 import com.vk.auth.repositories.RoleRepository;
@@ -41,10 +45,22 @@ public class IUserService implements UserService {
 	}
 
 	@Override
-	public void createUser(UserSignUpRequest request) {
+	public UserSignUpResponseDto createUser(UserSignUpRequestDto request) throws UserAlreadyExistsException {
+		if(this.userRepository.findByEmail(request.getEmail()).isPresent()) {
+			throw new UserAlreadyExistsException("User already exists with the email : " + request.getEmail());
+		}
 		User user = UserConverter.convertUserSignUpRequestToUser(request);
 		user.setPasswordSalt(hashPassword(request.getPassword()));
-		userRepository.save(user);
+		User savedUser = userRepository.save(user);
+
+		UserSignUpResponseDto responseDTO = new UserSignUpResponseDto();
+		if (savedUser != null) {
+			responseDTO.setRequestStatus(RequestStatus.SUCCESS);
+		} else {
+			responseDTO.setRequestStatus(RequestStatus.FAILURE);
+		}
+
+		return responseDTO;
 	}
 
 	@Override
@@ -63,29 +79,32 @@ public class IUserService implements UserService {
 	}
 
 	@Override
-	public boolean login(LoginRequest request) {
+	public String login(LoginRequestDto request) {
 		Optional<User> user = userRepository.findByEmail(request.getEmail());
+		String token = null;
 		if (user.isPresent()) {
 			if (verifyPassword(request.getPassword(), user.get().getPasswordSalt())) {
-				String token = jwtUtil.generateToken(user.get().getEmail());
+				token = jwtUtil.generateToken(user.get().getEmail());
 
 				Session session = new Session();
 				session.setUser(user.get());
 				session.setToken(token);
+				session.setSessionStatus(SessionStatus.ACTIVE);
 				sessionRepository.save(session);
 
 				Optional<UserRole> userRoleOptional = roleRepository.findByName("Reader");
 
 				if (userRoleOptional.isPresent()) {
-					user.get().setRoles(List.of(userRoleOptional.get()));
+					user.get().setRoles(Set.of(userRoleOptional.get()));
 				}
 
 				userRepository.save(user.get());
 
-				return true;
+				return token;
 			}
 		}
-		return false;
+
+		return token;
 	}
 
 	public String hashPassword(String plainPassword) {

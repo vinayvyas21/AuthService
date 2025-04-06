@@ -1,9 +1,11 @@
 package com.vk.auth.models;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +20,7 @@ public class User extends BaseModel {
 	
 	private String gender;
 	
-	@OneToMany
-	List<UserRole> roles;
+	@ManyToMany(fetch = FetchType.EAGER)
+	private Set<UserRole> roles = new HashSet<>();
 
 }
