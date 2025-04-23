@@ -7,6 +7,6 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class UserRole extends BaseModel {
+public class Role extends BaseModel {
 	String name;
 }

@@ -1,7 +1,6 @@
 package com.vk.auth.models;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import com.vk.auth.listeners.AuditListener;
 

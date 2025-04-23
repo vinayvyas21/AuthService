@@ -18,10 +18,10 @@ import com.vk.auth.exceptions.InvalidTokenException;
 import com.vk.auth.exceptions.UserAlreadyExistsException;
 import com.vk.auth.exceptions.UserNotFoundException;
 import com.vk.auth.exceptions.WrongPasswordException;
+import com.vk.auth.models.Role;
 import com.vk.auth.models.Session;
 import com.vk.auth.models.SessionStatus;
 import com.vk.auth.models.User;
-import com.vk.auth.models.UserRole;
 import com.vk.auth.repositories.RoleRepository;
 import com.vk.auth.repositories.SessionRepository;
 import com.vk.auth.repositories.UserRepository;
@@ -105,7 +105,7 @@ public class IUserService implements UserService {
 				session.setSessionStatus(SessionStatus.ACTIVE);
 				sessionRepository.save(session);
 
-				Optional<UserRole> userRoleOptional = roleRepository.findByName("Reader");
+				Optional<Role> userRoleOptional = roleRepository.findByName("Reader");
 
 				if (userRoleOptional.isPresent()) {
 					user.get().setRoles(Set.of(userRoleOptional.get()));

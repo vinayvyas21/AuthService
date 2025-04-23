@@ -21,6 +21,6 @@ public class User extends BaseModel {
 	private String gender;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
-	private Set<UserRole> roles = new HashSet<>();
+	private Set<Role> roles = new HashSet<>();
 
 }
