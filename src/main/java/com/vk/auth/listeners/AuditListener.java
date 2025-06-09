@@ -8,6 +8,13 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostUpdate;
 import jakarta.persistence.PreRemove;
 
+/**
+ * AuditListener is a JPA entity listener that automatically sets the createdAt,
+ * updatedAt, and deletedAt timestamps for User entities.
+ * 
+ * It uses JPA lifecycle callbacks to update these fields when the entity is
+ * persisted, updated, or removed.
+ */
 public class AuditListener {
 	
 	@PreRemove

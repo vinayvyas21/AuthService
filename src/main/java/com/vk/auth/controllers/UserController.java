@@ -24,6 +24,10 @@ import com.vk.auth.exceptions.UserNotFoundException;
 import com.vk.auth.exceptions.WrongPasswordException;
 import com.vk.auth.services.UserService;
 
+/**
+ * UserController handles user authentication and management operations.
+ * It provides endpoints for user sign-up, login, token validation, and logout.
+ */
 @RestController
 @RequestMapping("/auth")
 public class UserController {

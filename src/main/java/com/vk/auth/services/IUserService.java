@@ -30,7 +30,9 @@ import com.vk.auth.repositories.RoleRepository;
 import com.vk.auth.repositories.SessionRepository;
 import com.vk.auth.repositories.UserRepository;
 import com.vk.auth.utils.JwtUtil;
-
+/**
+ * Service class for managing user operations such as sign up, login, logout, and session management.
+ */
 @Service
 public class IUserService implements UserService {
 

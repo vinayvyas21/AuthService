@@ -1,6 +1,5 @@
 package com.vk.auth.utils;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -13,7 +12,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-
+/** * Utility class for generating and validating JWT tokens.
+ * It uses HS256 algorithm for signing the tokens.
+ */
 @Component
 public class JwtUtil {
 
