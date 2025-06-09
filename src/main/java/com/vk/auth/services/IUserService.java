@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vk.auth.config.KafkaProducerClient;
 import com.vk.auth.converters.UserConverter;
 import com.vk.auth.dtos.LoginRequestDto;
 import com.vk.auth.dtos.RequestStatus;
+import com.vk.auth.dtos.SendEmailDto;
 import com.vk.auth.dtos.UserSignUpRequestDto;
 import com.vk.auth.dtos.UserSignUpResponseDto;
 import com.vk.auth.exceptions.ActiveSessionsLimitationException;
@@ -38,15 +42,21 @@ public class IUserService implements UserService {
 
 	RoleRepository roleRepository;
 
+	private KafkaProducerClient kafkaProducerClient;
+	private ObjectMapper objectMapper;
+
 	@Autowired
 	private JwtUtil jwtUtil;
 
 	public IUserService(UserRepository userRepository, BCryptPasswordEncoder encoder,
-			SessionRepository sessionRepository, RoleRepository roleRepository) {
+			SessionRepository sessionRepository, RoleRepository roleRepository, KafkaProducerClient kafkaProducerClient,
+			ObjectMapper objectMapper) {
 		this.userRepository = userRepository;
 		this.encoder = encoder;
 		this.sessionRepository = sessionRepository;
 		this.roleRepository = roleRepository;
+		this.kafkaProducerClient = kafkaProducerClient;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -57,6 +67,20 @@ public class IUserService implements UserService {
 		User user = UserConverter.convertUserSignUpRequestToUser(request);
 		user.setPasswordSalt(hashPassword(request.getPassword()));
 		User savedUser = userRepository.save(user);
+
+		// Once the signup is complete, send a message to Kafka for sending an email to
+		// the User.
+		SendEmailDto sendEmailDto = new SendEmailDto();
+		sendEmailDto.setTo(user.getEmail());
+		sendEmailDto.setFrom("admin@scaler.com");
+		sendEmailDto.setSubject("Welcome to Scaler");
+		sendEmailDto.setBody("Thanks for joining Scaler");
+
+		try {
+			kafkaProducerClient.sendMessage("sendEmail", objectMapper.writeValueAsString(sendEmailDto));
+		} catch (JsonProcessingException e) {
+			System.out.println("Something went wrong while sending a message to Kafka");
+		}
 
 		UserSignUpResponseDto responseDTO = new UserSignUpResponseDto();
 		if (savedUser != null) {
@@ -89,14 +113,15 @@ public class IUserService implements UserService {
 		String token = null;
 		if (user.isPresent()) {
 			if (verifyPassword(request.getPassword(), user.get().getPasswordSalt())) {
-				
+
 				List<Session> sessions = sessionRepository.findByUserId(user.get().getId());
-				long activeSessions = sessions.stream().filter(session -> session.getSessionStatus() == SessionStatus.ACTIVE).count();
-				
-				if(activeSessions == 2) {
+				long activeSessions = sessions.stream()
+						.filter(session -> session.getSessionStatus() == SessionStatus.ACTIVE).count();
+
+				if (activeSessions == 2) {
 					throw new ActiveSessionsLimitationException("Only 2 active sessions are allowed");
 				}
-				
+
 				token = jwtUtil.generateToken(user.get().getEmail());
 
 				Session session = new Session();
