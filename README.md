@@ -53,5 +53,12 @@ git clone https://github.com/vinayvyas21/AuthService
 6. Access the application:
    Open your browser and navigate to `http://localhost:8080`.
 
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Author
+
+Developed by Vinay Kumar.
 
 
